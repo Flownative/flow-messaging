@@ -1,0 +1,17 @@
+{
+  "name": "flownative/messaging",
+  "type": "typo3-flow-package",
+  "description": "Messaging foundation for Flow Framework",
+  "license": "MIT",
+  "support": {
+    "email": "support@flownative.com"
+  },
+  "require": {
+    "typo3/flow": "3.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Flownative\\Messaging\\": "Classes"
+    }
+  }
+}
