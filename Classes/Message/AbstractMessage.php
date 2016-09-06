@@ -31,6 +31,11 @@ abstract class AbstractMessage implements MessageInterface
     protected $messageCreationDateTime;
 
     /**
+     * @var integer
+     */
+    protected $messageVersion = 0;
+
+    /**
      * The user-defined "headers" of a message
      *
      * @var array
@@ -45,18 +50,26 @@ abstract class AbstractMessage implements MessageInterface
     protected $messagePayload;
 
     /**
+     * Names of all internal class properties which are contained in "message data"
+     *
+     * @var array
+     */
+    protected static $messageDataPropertyNames = ['messageIdentifier', 'messageCreationDateTime', 'messageVersion', 'messagePayload', 'messageMetadata'];
+
+    /**
      * Create a new message instance based on the given message data, without calling the constructor
      * or re-initializing its metadata.
      *
      * This method is used for reconstituting messages from a storage or transport channel.
      *
-     * @param array $messageData The message data. Must contain keys "messageIdentifier", "messageCreationDateTime", "messagePayload" and "messageMetadata".
+     * @param array $messageData The message data. Must contain keys "messageIdentifier", "messageCreationDateTime", "messageVersion", "messagePayload" and "messageMetadata".
      * @return AbstractMessage
+     * @see getMessageData()
      * @api
      */
     public static function recreate(array $messageData)
     {
-        foreach (['messageIdentifier', 'messageCreationDateTime', 'messagePayload', 'messageMetadata'] as $key) {
+        foreach (self::$messageDataPropertyNames as $key) {
             if (!isset($messageData[$key])) {
                 throw new \InvalidArgumentException(sprintf('Message data must contain %s.', $key), 1469565781338);
             }
@@ -67,10 +80,24 @@ abstract class AbstractMessage implements MessageInterface
         $message = $messageClass->newInstanceWithoutConstructor();
         $message->messageIdentifier = $messageData['messageIdentifier'];
         $message->messageCreationDateTime = $messageData['messageCreationDateTime'];
+        $message->messageVersion = $messageData['messageVersion'];
         $message->setMessagePayload($messageData['messagePayload']);
         $message->setMessageMetadata($messageData['messageMetadata']);
 
         return $message;
+    }
+
+    /**
+     * Clones this message and sets the version to the specified number.
+     *
+     * @param integer $newVersion
+     * @return AbstractMessage
+     */
+    public function cloneWithNewVersion($newVersion)
+    {
+        $messageData = $this->getMessageData();
+        $messageData['messageVersion'] = $newVersion;
+        return self::recreate($messageData);
     }
 
     /**
@@ -96,6 +123,16 @@ abstract class AbstractMessage implements MessageInterface
     }
 
     /**
+     * Returns the version of this message
+     *
+     * @return integer
+     */
+    public function getMessageVersion()
+    {
+        return $this->messageVersion;
+    }
+
+    /**
      * Returns the metadata of this message
      *
      * @return array
@@ -118,7 +155,26 @@ abstract class AbstractMessage implements MessageInterface
     }
 
     /**
+     * Returns all data of this message in one array
+     *
+     * @return array
+     * @api
+     */
+    public function getMessageData()
+    {
+        return [
+            'messageIdentifier' => $this->messageIdentifier,
+            'messageCreationDateTime' => $this->messageCreationDateTime,
+            'messageVersion' => $this->messageVersion,
+            'messagePayload' => $this->getMessagePayload(),
+            'messageMetadata' => $this->getMessageMetadata()
+        ];
+    }
+
+    /**
      * Initializes the message with the necessary identifier and timestamp
+     *
+     * This method should be called on instantiation by sub classes of this AbstractMessage class.
      *
      * @return void
      */
