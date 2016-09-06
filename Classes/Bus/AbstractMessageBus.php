@@ -23,14 +23,14 @@ abstract class AbstractMessageBus implements MessageBusInterface
 {
 
     /**
-     * Commands to be dispatched
+     * Messages to be dispatched
      *
      * @var array
      */
     protected $messageDispatchQueue = [];
 
     /**
-     * @var boolean
+     * @var bool
      */
     protected $dispatching = false;
 
@@ -58,5 +58,4 @@ abstract class AbstractMessageBus implements MessageBusInterface
             $this->dispatching = false;
         }
     }
-
 }
